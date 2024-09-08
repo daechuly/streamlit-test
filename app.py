@@ -9,3 +9,6 @@ st.bar_chart(view)
 
 ss=pd.Series(view)
 ss
+
+
+ss
