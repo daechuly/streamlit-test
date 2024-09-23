@@ -1,0 +1,8 @@
+streamlit
+pandas
+datetime
+bcrypt
+base64
+json
+os
+logging
