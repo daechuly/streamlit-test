@@ -515,7 +515,7 @@ def main_confirm():
 
 def main():
     
-    st.sidebar.image('images.jpg')
+    ## st.sidebar.image('images.jpg')
     
     menu = ['Home (Login)', '신청현황 조회', '신규강습 신청 - 회원', '기존신청 취소 - 회원', '신청 확정 - 운영자', '강습 완료 - 운영자']
     
