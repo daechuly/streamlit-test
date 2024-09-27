@@ -2,8 +2,6 @@
 import streamlit as st
 import pandas as pd
 import datetime
-import bcrypt    # password 암호화
-import base64    #  passwordd 암호화
 import json
 import os
 import logging
@@ -244,10 +242,7 @@ def login_session(in_name: str, in_pwd: str):
         st.error(str(ex))
         return False
         
-    hashed = base64.b64decode(pwd.encode('utf-8'))     ## 비밀번호 비교 확인
-    if not bcrypt.checkpw(in_pwd.encode(), hashed):
-        st.warning('비밀번호 오류 입니다.')
-        return False
+    
 
     st.session_state.trainee = in_name
     st.session_state.admin_flag = st.session_state.members[in_name]["admin_flag"]
@@ -268,11 +263,9 @@ def insert_trainee(in_name: str, in_pwd: str):
         st.warning('비밀번호는 4자 이상 입력하세요.')
         return False
     
-    hashed = bcrypt.hashpw(in_pwd.encode(), bcrypt.gensalt())
-    hashed = base64.b64encode(hashed).decode('utf-8')
-  
+    
     st.session_state.members[in_name]={}
-    st.session_state.members[in_name]['passwd'] = hashed
+    st.session_state.members[in_name]['passwd'] = in_pwd
     st.session_state.members[in_name]['admin_flag'] = 0
     
     try:
@@ -291,10 +284,9 @@ def insert_trainee(in_name: str, in_pwd: str):
 
 def change_passwd(in_name: str, in_pwd: str):
 
-    hashed = bcrypt.hashpw(in_pwd.encode(), bcrypt.gensalt())
-    hashed = base64.b64encode(hashed).decode('utf-8')
+   
 
-    st.session_state.members[in_name]['passwd'] = hashed
+    st.session_state.members[in_name]['passwd'] = in_pwd
     
     try:
         write_json(st.session_state.member_path, st.session_state.members)
