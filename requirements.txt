@@ -1,7 +1,6 @@
 streamlit
 pandas
 datetime
-bcrypt
 json
 os
 logging
