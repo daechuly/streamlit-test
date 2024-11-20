@@ -1,5 +1,111 @@
-streamlit
-pandas
-json
-os
-logging
+root/root
+drop database if exists edgedb;
+create database edgedb;
+
+DROP USER if exists 'edge'@'%';
+CREATE USER edge@'%' IDENTIFIED BY 'edgepwd';
+GRANT ALL PRIVILEGES ON edgedb.* TO edge@'%';
+
+use edgedb;
+
+drop table if exists train_plan;
+drop table if exists trainees;
+drop table if exists trainers;
+
+create table TRAINEES ( 
+    TRAINEE varchar(10) PRIMARY KEY,
+    PASSWD varchar(120) not null,
+    ADMIN_FLAG boolean default false
+);
+
+create table TRAINERS ( 
+    TRAINER varchar(10) PRIMARY KEY
+);
+
+create table TRAIN_PLAN (
+	TRAIN_DT date,
+    TRAINEE varchar(10), 
+    TRAINER varchar(10) not null, 
+    UPDATE_DT datetime not null default (current_time()),
+    CONFIRM_FLAG varchar(8) not null default ('신청'),
+    primary key (train_dt, trainee)
+);
+
+alter table train_plan
+add constraint train_plan_fk_trainee foreign key (trainee) references trainees (trainee);
+
+alter table train_plan
+add constraint train_plan_fk_trainer foreign key (trainer) references trainers (trainer);
+
+alter table train_plan
+add constraint train_plan_ck_confirm_flag check  (CONFIRM_FLAG in ('신청','취소','완료','확정'));
+
+
+{
+    "db_conn": {
+        "user" : "edge",
+        "password" : "edgepwd",
+        "host" : "localhost",
+        "port" : 3306,
+        "database" : "edgedb",
+        "charset" : "utf8"
+    },
+    
+    "edge_oper" : {
+        "인당주별신청한도" : 1,
+        "코치당주별신청한도" : 6,
+        "구코치월한도" : 32,
+        "신코치월한도" : 24
+    }
+}
+
+
+
+
+import pymysql
+import bcrypt
+import base64
+
+db_config = {
+    'user' : 'edge',
+    'password' : 'edgepwd',
+    'host' : 'localhost',
+    'port' : 3306,
+    'database' : 'edgedb',
+    'charset' : 'utf8'
+}
+
+
+
+db_conn = pymysql.connect(**db_config)
+curs = db_conn.cursor()
+
+members = ['박양상','김세훈','정연수','한성현','안종길','조성호','박성원','김성봉','박상욱','박현호','전창현','박윤선',
+'김상희','조정봉','전종표','김성덕','김정훈','오은성','윤병광','임덕수','최성욱','신민철','유인철','강명희','남경아','양대철','김지형','현충남',
+'오양세','조진형','정승원','이봉우','오태원','박지우','박종택','곽동우','김정길','지영철','이건호','박동영','김지훈','안준용','박종일','김형민',
+'최승인','박진호','김용재','오원석','조현구','노승환','노우경','강승천','서봉수','김준호','조강희','백정호','이기근','김부영','정대일',]
+
+curs.execute('set sql_safe_updates=0')
+
+db_conn.commit()
+
+for mem in members:
+    sql = "INSERT INTO trainees (TRAINEE, passwd) VALUES (%s, %s)"
+    
+    pwd = 'edge'
+    hashed = bcrypt.hashpw(pwd.encode(), bcrypt.gensalt())
+    hashed = base64.b64encode(hashed).decode('utf-8')
+    val = (mem, hashed)
+
+    curs.execute(sql, val)
+
+curs.execute("update trainees set admin_flag = True where trainee = '이기근'")
+curs.execute("update trainees set admin_flag = True where trainee = '정승원'")
+curs.execute("update trainees set admin_flag = True where trainee = '양대철'")
+
+curs.execute("insert into trainers value ('구코치')")
+curs.execute("insert into trainers value ('신코치')")
+
+db_conn.commit()
+curs.close()
+db_conn.close()
